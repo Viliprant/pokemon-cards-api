@@ -16,6 +16,11 @@ export class PokemonController {
     return this.pokemonService.findRandomByRarity(rarity);
   }
 
+  @Get('/rarities')
+  async findRarities(): Promise<string[]> {
+    return this.pokemonService.getRarities();
+  }
+
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.pokemonService.findOne(id);

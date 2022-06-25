@@ -7,7 +7,8 @@ import { Response } from './entities/response.entity';
 
 @Injectable()
 export class PokemonService {
-  connectionString = 'https://api.pokemontcg.io/v2/cards';
+  connectionStringCards = 'https://api.pokemontcg.io/v2/cards';
+  connectionStringRarities = 'https://api.pokemontcg.io/v2/rarities';
 
   constructor(private readonly httpService: HttpService) {}
 
@@ -16,7 +17,7 @@ export class PokemonService {
   }
 
   async findOne(id: string) {
-    const requestURL = `${this.connectionString}/${id}?select=id,name,rarity,images`;
+    const requestURL = `${this.connectionStringCards}/${id}?select=id,name,rarity,images`;
     console.log(`Request to ${requestURL}`);
 
     const response: AxiosResponse<Response> = await firstValueFrom(
@@ -34,7 +35,7 @@ export class PokemonService {
     const randomNumber =
       Math.floor(Math.random() * responseCount.data.totalCount - 1) + 1;
 
-    const requestURL = `${this.connectionString}?pageSize=1&page=${randomNumber}&q=rarity:"${rarity}"&select=id,name,rarity,images`;
+    const requestURL = `${this.connectionStringCards}?pageSize=1&page=${randomNumber}&q=rarity:"${rarity}"&select=id,name,rarity,images`;
     console.log(`Request to ${requestURL}`);
 
     const response: AxiosResponse<Response> = await firstValueFrom(
@@ -42,5 +43,16 @@ export class PokemonService {
     );
 
     return response.data.data;
+  }
+
+  async getRarities(): Promise<string[]> {
+    const requestURL = `${this.connectionStringRarities}`;
+    console.log(`Request to ${requestURL}`);
+
+    const response: AxiosResponse<string[]> = await firstValueFrom(
+      this.httpService.get(requestURL),
+    );
+
+    return response.data;
   }
 }
