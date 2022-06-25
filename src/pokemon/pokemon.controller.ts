@@ -12,14 +12,12 @@ export class PokemonController {
   }
 
   @Get('/random')
-  async findRandomByRarity(
-    @Query('rarity') rarity: string,
-  ): Promise<Pokemon[]> {
+  async findRandomByRarity(@Query('rarity') rarity: string): Promise<Pokemon> {
     return this.pokemonService.findRandomByRarity(rarity);
   }
 
   @Get(':id')
   findOne(@Param('id') id: string) {
-    return this.pokemonService.findOne(+id);
+    return this.pokemonService.findOne(id);
   }
 }

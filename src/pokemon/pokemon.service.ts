@@ -15,11 +15,18 @@ export class PokemonService {
     return `This action returns all pokemon`;
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} pokemon`;
+  async findOne(id: string) {
+    const requestURL = `${this.connectionString}/${id}?select=id,name,rarity,images`;
+    console.log(`Request to ${requestURL}`);
+
+    const response: AxiosResponse<Response> = await firstValueFrom(
+      this.httpService.get(requestURL),
+    );
+
+    return response.data.data;
   }
 
-  async findRandomByRarity(rarity: string): Promise<Pokemon[]> {
+  async findRandomByRarity(rarity: string): Promise<Pokemon> {
     const requestCountTotal = `https://api.pokemontcg.io/v2/cards?pageSize=1&q=rarity:"${rarity}"&select=totalCount`;
     const responseCount: AxiosResponse<Response> = await firstValueFrom(
       this.httpService.get(requestCountTotal),
