@@ -27,13 +27,17 @@ export class PokemonService {
     return response.data.data;
   }
 
-  async findRandomByRarity(rarity: string): Promise<Pokemon> {
+  async getCount(rarity: string): Promise<number> {
     const requestCountTotal = `https://api.pokemontcg.io/v2/cards?pageSize=1&q=rarity:"${rarity}"&select=totalCount`;
-    const responseCount: AxiosResponse<Response> = await firstValueFrom(
+    const countResponse: AxiosResponse<Response> = await firstValueFrom(
       this.httpService.get(requestCountTotal),
     );
-    const randomNumber =
-      Math.floor(Math.random() * responseCount.data.totalCount - 1) + 1;
+    return countResponse.data.totalCount;
+  }
+
+  async findRandomByRarity(rarity: string): Promise<Pokemon> {
+    const count: number = await this.getCount(rarity);
+    const randomNumber = Math.floor(Math.random() * count - 1) + 1;
 
     const requestURL = `${this.connectionStringCards}?pageSize=1&page=${randomNumber}&q=rarity:"${rarity}"&select=id,name,rarity,images`;
     console.log(`Request to ${requestURL}`);
