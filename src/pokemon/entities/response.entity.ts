@@ -1,7 +1,7 @@
 import { Pokemon } from './pokemon.entity';
 
 export class Response {
-  data: Pokemon;
+  data: Pokemon[];
   page: number;
   pageSize: number;
   count: number;

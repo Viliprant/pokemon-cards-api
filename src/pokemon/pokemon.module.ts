@@ -7,5 +7,6 @@ import { HttpModule } from '@nestjs/axios';
   imports: [HttpModule],
   controllers: [PokemonController],
   providers: [PokemonService],
+  exports: [PokemonService],
 })
 export class PokemonModule {}
