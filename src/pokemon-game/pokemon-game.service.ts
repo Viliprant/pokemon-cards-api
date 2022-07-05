@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { Pokemon } from 'src/pokemon/entities/pokemon.entity';
 import { PokemonService } from 'src/pokemon/pokemon.service';
+import { UserCardsDto } from './dto/user-cards.dto';
 import { Booster } from './entities/booster.entity';
 
 @Injectable()
@@ -60,9 +61,11 @@ export class PokemonGameService {
     user.pokemons = newPokemonList;
   }
 
-  async findPokemonsByUserID(userID: number): Promise<Pokemon[]> {
-    return (await this.mockDatabase.find((user) => user.id === userID))
-      .pokemons;
+  async findPokemonsByUserID(userID: number): Promise<UserCardsDto> {
+    const userCards: Pokemon[] = (
+      await this.mockDatabase.find((user) => user.id === userID)
+    ).pokemons;
+    return new UserCardsDto(userCards);
   }
 
   createOrAddQuantity(booster: Booster, userPokemons: Pokemon[]): Pokemon[] {
