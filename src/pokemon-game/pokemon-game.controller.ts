@@ -1,5 +1,4 @@
 import { Controller, Get, Param, ParseIntPipe } from '@nestjs/common';
-import { Pokemon } from 'src/pokemon/entities/pokemon.entity';
 import { UserCardsDto } from './dto/user-cards.dto';
 import { Booster } from './entities/booster.entity';
 import { PokemonGameService } from './pokemon-game.service';
