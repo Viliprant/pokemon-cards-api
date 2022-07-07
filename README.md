@@ -8,7 +8,7 @@
  - [x] Refresh Token
  - [x] Hash password
  - [x] Rajouter des events:
- - [x] UserCreated -> Create collection for this user
+    - [x] UserCreated -> Create collection for this user
  - [ ] Base de données
     - [ ] Ajouter les utilisateurs
     - [ ] Ajouter les collections de cartes
