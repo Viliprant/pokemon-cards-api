@@ -31,17 +31,6 @@ export class PokemonGameService {
       }
     }
 
-    booster.add({
-      id: 'cel25c-15_A2',
-      name: 'Here Comes Team Rocket!',
-      rarity: 'Classic Collection',
-      images: {
-        small: 'https://images.pokemontcg.io/cel25c/15_B.png',
-        large: 'https://images.pokemontcg.io/cel25c/15_B_hires.png',
-      },
-      quantity: 1,
-    });
-
     // TODO INSERTION EN BASE DE DONNEES
     return booster;
   }
