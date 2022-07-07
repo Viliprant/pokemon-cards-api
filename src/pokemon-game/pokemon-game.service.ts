@@ -4,6 +4,7 @@ import { PokemonService } from 'src/pokemon/pokemon.service';
 import { Booster } from './entities/booster.entity';
 import { Cards } from './entities/cards.entity';
 import { Collection } from './entities/collection.entity';
+import * as lodash from 'lodash';
 
 @Injectable()
 export class PokemonGameService {
@@ -73,22 +74,22 @@ export class PokemonGameService {
   }
 
   createOrAddQuantity(booster: Booster, cards: Cards): Cards {
-    // TODO: Make Pure function
+    const updatedCards = lodash.cloneDeep(cards);
     booster.pokemons.map((pokemonToAdd) => {
       if (pokemonToAdd) {
-        const alreadyExist: Pokemon = cards.pokemons.find((pokemon) => {
+        const alreadyExist: Pokemon = updatedCards.pokemons.find((pokemon) => {
           return pokemon.id === pokemonToAdd.id;
         });
         if (alreadyExist) {
           alreadyExist.quantity++;
         } else {
-          cards.pokemons.push(pokemonToAdd);
+          updatedCards.pokemons.push(pokemonToAdd);
         }
         return pokemonToAdd;
       }
     });
 
-    return cards;
+    return updatedCards;
   }
 
   createCollection(userID: string) {
