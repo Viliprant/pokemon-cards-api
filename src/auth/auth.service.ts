@@ -6,6 +6,7 @@ import { UsersService } from '../users/users.service';
 import * as bcrypt from 'bcrypt';
 import { SafeUser } from 'src/users/dto/safe-user.dto';
 import { EventEmitter2 } from '@nestjs/event-emitter';
+import { RefreshTokenService } from './refresh-token/refresh-token.service';
 
 @Injectable()
 export class AuthService {
@@ -13,21 +14,39 @@ export class AuthService {
     private usersService: UsersService,
     private jwtService: JwtService,
     private eventEmitter: EventEmitter2,
+    private refreshTokenService: RefreshTokenService,
   ) {}
 
   async validateUser(username: string, password: string) {
     const user: User = await this.usersService.findOneByUsername(username);
-    const isMatch: boolean = await bcrypt.compare(password, user.password);
+    if (!user) {
+      return null;
+    }
 
-    if (user && isMatch) {
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const isMatch: boolean = await bcrypt.compare(password, user.password);
+    if (isMatch) {
+      return new SafeUser(user);
+    }
+    return null;
+  }
+
+  async validateRefreshToken(refresh_token) {
+    const user: User = await this.usersService.findOneByUsername(
+      refresh_token.username,
+    );
+    if (!user) {
+      return null;
+    }
+
+    const isMatch: boolean = user.refreshToken === refresh_token.refresh_token;
+    if (isMatch) {
       return new SafeUser(user);
     }
     return null;
   }
 
   async login(user: User) {
-    return this.createJWTToken(user);
+    return this.createAccessToken(user);
   }
 
   async register(newUser: CreateUserDto) {
@@ -47,13 +66,24 @@ export class AuthService {
 
     this.eventEmitter.emit('user.created', createdUser);
 
-    return this.createJWTToken(createdUser);
+    return this.createAccessToken(createdUser);
   }
 
-  createJWTToken(user: User) {
+  createAccessToken(user: User) {
     const payload = { username: user.username, sub: user.id };
     return {
       access_token: this.jwtService.sign(payload),
+    };
+  }
+
+  async createRefreshToken(user): Promise<any> {
+    const payload = {
+      username: user.username,
+      sub: user.id || user.sub,
+    };
+
+    return {
+      refresh_token: await this.refreshTokenService.sign(payload),
     };
   }
 

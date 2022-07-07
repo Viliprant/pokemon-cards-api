@@ -19,6 +19,12 @@ export class UsersService {
     return this.users.find((user) => user.mail === mail);
   }
 
+  async updateRefreshToken(userID: string, newRefreshToken: string) {
+    const user: User = this.users.find((user) => user.id === userID);
+
+    user.refreshToken = newRefreshToken;
+  }
+
   async createUser(newUser: CreateUserDto): Promise<User> {
     const saltOrRounds: number = +(await this.configService.get<number>(
       'SAlT_OR_ROUNDS',
@@ -33,6 +39,7 @@ export class UsersService {
       password: hashPassword,
       createdAt: new Date(),
       updatedAt: new Date(),
+      refreshToken: null,
     };
 
     this.users.push(user);

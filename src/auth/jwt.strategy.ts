@@ -4,18 +4,19 @@ import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 
 @Injectable()
-export class JwtStrategy extends PassportStrategy(Strategy) {
+export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
   constructor(private configService: ConfigService) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,
-      secretOrKey: configService.get<string>('SECRET_JWT'),
+      secretOrKey: configService.get<string>('ACCESS_TOKEN_SECRET'),
+      signOptions: {
+        expiresIn: configService.get<string>('ACCESS_TOKEN_EXPIRATION'),
+      },
     });
   }
 
   async validate(payload: any) {
-    // TODO: Verifier les IDs en BDD pour les tokens révoqués
-    // TODO: REFRESH_TOKEN ...
     return { id: payload.sub, username: payload.username };
   }
 }

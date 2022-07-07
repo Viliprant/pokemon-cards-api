@@ -5,7 +5,7 @@
 [x] Connexion
 [x] Liaison user -> pokemon
 [x] JWT
-[ ] Refresh Token
+[x] Refresh Token
 [x] Hash password
 [x] Rajouter des events:
  - [x] UserCreated -> Create collection for this user
