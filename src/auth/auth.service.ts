@@ -5,14 +5,14 @@ import { User } from 'src/users/entities/user.entity';
 import { UsersService } from '../users/users.service';
 import * as bcrypt from 'bcrypt';
 import { SafeUser } from 'src/users/dto/safe-user.dto';
-import { PokemonGameService } from 'src/pokemon-game/pokemon-game.service';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 
 @Injectable()
 export class AuthService {
   constructor(
     private usersService: UsersService,
     private jwtService: JwtService,
-    private pokemonGameService: PokemonGameService,
+    private eventEmitter: EventEmitter2,
   ) {}
 
   async validateUser(username: string, password: string) {
@@ -44,8 +44,9 @@ export class AuthService {
     }
 
     const createdUser: User = await this.usersService.createUser(newUser);
-    // Générer l'event UserCreated
-    this.pokemonGameService.createCollection(createdUser.id);
+
+    this.eventEmitter.emit('user.created', createdUser);
+
     return this.createJWTToken(createdUser);
   }
 

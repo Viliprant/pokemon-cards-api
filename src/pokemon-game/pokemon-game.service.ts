@@ -5,6 +5,8 @@ import { Booster } from './entities/booster.entity';
 import { Cards } from './entities/cards.entity';
 import { Collection } from './entities/collection.entity';
 import * as lodash from 'lodash';
+import { User } from 'src/users/entities/user.entity';
+import { OnEvent } from '@nestjs/event-emitter';
 
 @Injectable()
 export class PokemonGameService {
@@ -83,5 +85,10 @@ export class PokemonGameService {
 
   createCollection(userID: string) {
     this.collections.push(new Collection(userID));
+  }
+
+  @OnEvent('user.created')
+  handleOrderCreatedEvent(newUser: User) {
+    this.createCollection(newUser.id);
   }
 }
