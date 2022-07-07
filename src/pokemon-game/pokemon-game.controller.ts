@@ -1,14 +1,15 @@
 import {
+  ClassSerializerInterceptor,
   Controller,
   Get,
-  Param,
-  ParseIntPipe,
+  InternalServerErrorException,
   Request,
   UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
-import { UserCardsDto } from './dto/user-cards.dto';
 import { Booster } from './entities/booster.entity';
+import { Collection } from './entities/collection.entity';
 import { PokemonGameService } from './pokemon-game.service';
 
 @Controller('pokemon-game')
@@ -16,18 +17,27 @@ export class PokemonGameController {
   constructor(private readonly pokemonGameService: PokemonGameService) {}
 
   @UseGuards(JwtAuthGuard)
-  @Get()
+  @Get('booster')
   async openBooster(@Request() request): Promise<Booster> {
+    const collection: Collection =
+      await this.pokemonGameService.findCollectionByUserID(request.user.id);
+
+    if (!collection) {
+      console.error("La collection n'existe pas.");
+      throw new InternalServerErrorException();
+    }
+
     const booster: Booster = await this.pokemonGameService.createBooster();
-    this.pokemonGameService.addBoosterToUser(booster);
+    this.pokemonGameService.addBoosterToUser(booster, request.user.id);
     return booster;
   }
 
   @UseGuards(JwtAuthGuard)
-  @Get('/user/:id')
-  async findUserCards(
-    @Param('id', ParseIntPipe) userID: number,
-  ): Promise<UserCardsDto> {
-    return await this.pokemonGameService.findPokemonsByUserID(userID);
+  @UseInterceptors(ClassSerializerInterceptor)
+  @Get('collection')
+  async findUserCards(@Request() request): Promise<Collection> {
+    return await this.pokemonGameService.findCollectionByUserID(
+      request.user.id,
+    );
   }
 }

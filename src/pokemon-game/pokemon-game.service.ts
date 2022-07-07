@@ -1,28 +1,13 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { Pokemon } from 'src/pokemon/entities/pokemon.entity';
 import { PokemonService } from 'src/pokemon/pokemon.service';
-import { UserCardsDto } from './dto/user-cards.dto';
 import { Booster } from './entities/booster.entity';
+import { Cards } from './entities/cards.entity';
+import { Collection } from './entities/collection.entity';
 
 @Injectable()
 export class PokemonGameService {
-  mockDatabase = [
-    {
-      id: 1,
-      name: 'Brandon',
-      pokemons: [],
-    },
-    {
-      id: 2,
-      name: 'Sebastien',
-      pokemons: [],
-    },
-    {
-      id: 3,
-      name: 'Bastien',
-      pokemons: [],
-    },
-  ];
+  collections: Collection[] = [];
 
   constructor(private readonly pokemonService: PokemonService) {}
 
@@ -45,44 +30,68 @@ export class PokemonGameService {
       }
     }
 
+    booster.add({
+      id: 'cel25c-15_A2',
+      name: 'Here Comes Team Rocket!',
+      rarity: 'Classic Collection',
+      images: {
+        small: 'https://images.pokemontcg.io/cel25c/15_B.png',
+        large: 'https://images.pokemontcg.io/cel25c/15_B_hires.png',
+      },
+      quantity: 1,
+    });
+
     // TODO INSERTION EN BASE DE DONNEES
     return booster;
   }
 
-  addBoosterToUser(booster: Booster): void {
-    // TODO Rendre dynamique avec le login (context)
-    const loggedUsername = 'Brandon';
-
-    const user = this.mockDatabase.find((user) => user.name === loggedUsername);
-    const newPokemonList: Pokemon[] = this.createOrAddQuantity(
-      booster,
-      user.pokemons,
+  addBoosterToUser(booster: Booster, userID: string): void {
+    const collection = this.collections.find(
+      (collection) => collection.userID === userID,
     );
-    user.pokemons = newPokemonList;
+
+    if (!collection) {
+      console.error("La collection n'existe pas.");
+      throw new InternalServerErrorException();
+    }
+
+    const newCards: Cards = this.createOrAddQuantity(booster, collection.cards);
+    collection.cards = newCards;
   }
 
-  async findPokemonsByUserID(userID: number): Promise<UserCardsDto> {
-    const userCards: Pokemon[] = (
-      await this.mockDatabase.find((user) => user.id === userID)
-    ).pokemons;
-    return new UserCardsDto(userCards);
+  async findCollectionByUserID(userID: string): Promise<Collection> {
+    const collection: Collection = await this.collections.find(
+      (collection) => collection.userID === userID,
+    );
+
+    if (!collection) {
+      console.error("La collection n'existe pas.");
+      throw new InternalServerErrorException();
+    }
+
+    return collection;
   }
 
-  createOrAddQuantity(booster: Booster, userPokemons: Pokemon[]): Pokemon[] {
+  createOrAddQuantity(booster: Booster, cards: Cards): Cards {
+    // TODO: Make Pure function
     booster.pokemons.map((pokemonToAdd) => {
       if (pokemonToAdd) {
-        const alreadyExist: Pokemon = userPokemons.find((pokemon) => {
+        const alreadyExist: Pokemon = cards.pokemons.find((pokemon) => {
           return pokemon.id === pokemonToAdd.id;
         });
         if (alreadyExist) {
           alreadyExist.quantity++;
         } else {
-          userPokemons.push(pokemonToAdd);
+          cards.pokemons.push(pokemonToAdd);
         }
         return pokemonToAdd;
       }
     });
 
-    return userPokemons;
+    return cards;
+  }
+
+  createCollection(userID: string) {
+    this.collections.push(new Collection(userID));
   }
 }

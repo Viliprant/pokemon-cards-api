@@ -1,9 +1,12 @@
 # POKEMON COLLECTION
 
 ## TODO:
-[ ] Inscription
+[x] Inscription
 [x] Connexion
-[ ] Liaison user -> pokemon
+[x] Liaison user -> pokemon
 [x] JWT
-[ ] Hash password
+[ ] Refresh Token
+[x] Hash password
+[ ] Rajouter des events:
+ - [ ] UserCreated -> Create collection for this user
 [ ] Base de données
