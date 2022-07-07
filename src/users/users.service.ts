@@ -1,28 +1,42 @@
 import { Injectable } from '@nestjs/common';
+import { CreateUserDto } from './dto/create-user.dto';
 import { User } from './entities/user.entity';
+import { v4 as uuid } from 'uuid';
+import * as bcrypt from 'bcrypt';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class UsersService {
-  private readonly users: User[] = [
-    {
-      id: 1,
-      username: 'Brandon',
-      email: 'viliprant@gmail.com',
-      password: 'super',
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    },
-    {
-      id: 2,
-      username: 'Brandon2',
-      email: 'viliprant2@gmail.com',
-      password: 'super2',
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    },
-  ];
+  constructor(private readonly configService: ConfigService) {}
 
-  async findOne(username: string): Promise<User | undefined> {
+  private readonly users: User[] = [];
+
+  async findOneByUsername(username: string): Promise<User | undefined> {
     return this.users.find((user) => user.username === username);
+  }
+
+  async findOneByMail(mail: string): Promise<User | undefined> {
+    return this.users.find((user) => user.mail === mail);
+  }
+
+  async createUser(newUser: CreateUserDto): Promise<User> {
+    const saltOrRounds: number = +(await this.configService.get<number>(
+      'SAlT_OR_ROUNDS',
+    ));
+
+    const hashPassword = await bcrypt.hash(newUser.password, saltOrRounds);
+
+    const user: User = {
+      id: uuid(),
+      username: newUser.username,
+      mail: newUser.mail,
+      password: hashPassword,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
+    this.users.push(user);
+
+    return user;
   }
 }

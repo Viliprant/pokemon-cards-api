@@ -3,6 +3,7 @@ import {
   Get,
   Param,
   ParseIntPipe,
+  Request,
   UseGuards,
 } from '@nestjs/common';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
@@ -16,7 +17,7 @@ export class PokemonGameController {
 
   @UseGuards(JwtAuthGuard)
   @Get()
-  async openBooster(): Promise<Booster> {
+  async openBooster(@Request() request): Promise<Booster> {
     const booster: Booster = await this.pokemonGameService.createBooster();
     this.pokemonGameService.addBoosterToUser(booster);
     return booster;

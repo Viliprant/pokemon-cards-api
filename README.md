@@ -1,9 +1,9 @@
 # POKEMON COLLECTION
 
 ## TODO:
-- Inscription
-- Connexion
-- Liaison user -> pokemon
-- JWT
-- Hash password
-- Base de données
+[ ] Inscription
+[x] Connexion
+[ ] Liaison user -> pokemon
+[x] JWT
+[ ] Hash password
+[ ] Base de données
