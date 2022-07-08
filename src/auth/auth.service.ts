@@ -7,6 +7,7 @@ import * as bcrypt from 'bcrypt';
 import { SafeUser } from 'src/users/dto/safe-user.dto';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { RefreshTokenService } from './refresh-token/refresh-token.service';
+import { randomBytes } from 'crypto';
 
 @Injectable()
 export class AuthService {
@@ -24,21 +25,6 @@ export class AuthService {
     }
 
     const isMatch: boolean = await bcrypt.compare(password, user.password);
-    if (isMatch) {
-      return new SafeUser(user);
-    }
-    return null;
-  }
-
-  async validateRefreshToken(refresh_token) {
-    const user: User = await this.usersService.findOneByUsername(
-      refresh_token.username,
-    );
-    if (!user) {
-      return null;
-    }
-
-    const isMatch: boolean = user.refreshToken === refresh_token.refresh_token;
     if (isMatch) {
       return new SafeUser(user);
     }
@@ -80,6 +66,7 @@ export class AuthService {
     const payload = {
       username: user.username,
       sub: user.id || user.sub,
+      salt: randomBytes(16).toString('hex'),
     };
 
     return {

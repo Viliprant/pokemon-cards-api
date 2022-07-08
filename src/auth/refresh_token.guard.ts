@@ -1,6 +1,8 @@
 import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
 import { User } from 'src/users/entities/user.entity';
 import { UsersService } from 'src/users/users.service';
+import { AuthService } from './auth.service';
+import * as lodash from 'lodash';
 
 import { RefreshTokenService } from './refresh-token/refresh-token.service';
 
@@ -9,6 +11,7 @@ export class RefreshTokenGuard implements CanActivate {
   constructor(
     private refreshTokenService: RefreshTokenService,
     private userService: UsersService,
+    private authService: AuthService,
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -39,12 +42,25 @@ export class RefreshTokenGuard implements CanActivate {
     return true;
   }
 
-  async validateRefreshToken(refreshTokenCookie: string) {
-    const token = JSON.parse(refreshTokenCookie);
+  async validateRefreshToken(refreshTokenString: string) {
+    const token = JSON.parse(refreshTokenString);
+
+    if (!token?.refresh_token) {
+      return null;
+    }
+
     try {
       const payload = await this.refreshTokenService.verify(
         token.refresh_token,
       );
+
+      const isSameRefreshToken = await this.checkUserRefreshTokenInDatabase(
+        payload,
+      );
+
+      if (!isSameRefreshToken) {
+        return null;
+      }
 
       return payload;
     } catch (error) {
@@ -52,5 +68,22 @@ export class RefreshTokenGuard implements CanActivate {
 
       return null;
     }
+  }
+
+  async checkUserRefreshTokenInDatabase(payload) {
+    const safeUser: User = await this.userService.findOneByUsername(
+      payload.username,
+    );
+
+    if (!safeUser) {
+      return false;
+    }
+
+    const refreshTokenDB = JSON.parse(safeUser.refreshToken).refresh_token;
+    const payloadDB = await this.refreshTokenService.verify(refreshTokenDB);
+
+    const isMatchingWithDB: boolean = lodash.isEqual(payloadDB, payload);
+
+    return isMatchingWithDB;
   }
 }

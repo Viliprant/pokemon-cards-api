@@ -43,6 +43,12 @@ import { UsersService } from 'src/users/users.service';
     JwtAuthGuard,
     UsersService,
   ],
-  exports: [JwtAuthGuard, RefreshTokenGuard, RefreshTokenService, UsersService],
+  exports: [
+    JwtAuthGuard,
+    RefreshTokenGuard,
+    RefreshTokenService,
+    UsersService,
+    AuthService,
+  ],
 })
 export class AuthModule {}
