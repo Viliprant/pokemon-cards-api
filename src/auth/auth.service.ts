@@ -31,7 +31,7 @@ export class AuthService {
     return null;
   }
 
-  async login(user: User) {
+  async CreateAccessToken(user: User) {
     return this.createAccessToken(user);
   }
 

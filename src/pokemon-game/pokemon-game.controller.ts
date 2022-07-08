@@ -30,6 +30,7 @@ export class PokemonGameController {
 
     const booster: Booster = await this.pokemonGameService.createBooster();
     this.pokemonGameService.addBoosterToUser(booster, request.user.id);
+
     return booster;
   }
 

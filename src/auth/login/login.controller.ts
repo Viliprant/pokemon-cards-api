@@ -1,5 +1,4 @@
 import { Controller, Request, Post, UseGuards, Res } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import { Response } from 'express';
 import { UsersService } from 'src/users/users.service';
 import { AuthService } from '../auth.service';
@@ -11,21 +10,20 @@ export class LoginController {
   constructor(
     private authService: AuthService,
     private userService: UsersService,
-    private configService: ConfigService,
   ) {}
 
   @UseGuards(LocalAuthGuard)
   @Post('auth/login')
   async login(@Request() req, @Res({ passthrough: true }) response: Response) {
     const newRefreshToken = await this.authService.createRefreshToken(req.user);
-    const stringifiedCookie = JSON.stringify(newRefreshToken);
-    this.userService.updateRefreshToken(req.user.id, stringifiedCookie);
+    const stringifiedToken = JSON.stringify(newRefreshToken);
+    this.userService.updateRefreshToken(req.user.id, stringifiedToken);
 
-    response.cookie('auth_cookie', stringifiedCookie, {
+    response.cookie('auth_cookie', stringifiedToken, {
       httpOnly: true,
     });
 
-    return this.authService.login(req.user);
+    return this.authService.CreateAccessToken(req.user);
   }
 
   @UseGuards(RefreshTokenGuard)
@@ -35,13 +33,13 @@ export class LoginController {
     @Res({ passthrough: true }) response: Response,
   ) {
     const newRefreshToken = await this.authService.createRefreshToken(req.user);
-    const stringifiedCookie = JSON.stringify(newRefreshToken);
-    this.userService.updateRefreshToken(req.user.id, stringifiedCookie);
+    const stringifiedToken = JSON.stringify(newRefreshToken);
+    this.userService.updateRefreshToken(req.user.id, stringifiedToken);
 
-    response.cookie('auth_cookie', stringifiedCookie, {
+    response.cookie('auth_cookie', stringifiedToken, {
       httpOnly: true,
     });
 
-    return this.authService.login(req.user);
+    return this.authService.CreateAccessToken(req.user);
   }
 }

@@ -66,6 +66,7 @@ export class PokemonGameService {
 
   createOrAddQuantity(booster: Booster, cards: Cards): Cards {
     const updatedCards = lodash.cloneDeep(cards);
+
     booster.pokemons.map((pokemonToAdd) => {
       if (pokemonToAdd) {
         const alreadyExist: Pokemon = updatedCards.pokemons.find((pokemon) => {

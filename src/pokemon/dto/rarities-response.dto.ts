@@ -1,3 +1,3 @@
-export class RaritiesResponse {
+export class RaritiesResponseDto {
   data: string[];
 }

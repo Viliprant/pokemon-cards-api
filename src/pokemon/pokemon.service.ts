@@ -2,7 +2,7 @@ import { HttpService } from '@nestjs/axios';
 import { Injectable } from '@nestjs/common';
 import { AxiosResponse } from 'axios';
 import { firstValueFrom } from 'rxjs';
-import { RaritiesResponse } from './dto/rarities-response.dto';
+import { RaritiesResponseDto } from './dto/rarities-response.dto';
 import { Pokemon } from './entities/pokemon.entity';
 import { Response } from './entities/response.entity';
 
@@ -52,7 +52,7 @@ export class PokemonService {
     const requestURL = `${this.connectionStringRarities}`;
     console.log(`Request to ${requestURL}`);
 
-    const response: AxiosResponse<RaritiesResponse> = await firstValueFrom(
+    const response: AxiosResponse<RaritiesResponseDto> = await firstValueFrom(
       this.httpService.get(requestURL),
     );
 
