@@ -1,13 +1,25 @@
 # POKEMON COLLECTION
 
-## TODO:
- - [x] Inscription
- - [x] Connexion
- - [x] Liaison user -> pokemon
- - [x] JWT
- - [x] Refresh Token
- - [x] Hash password
- - [x] Base de données
-    - [x] Ajouter les utilisateurs
-    - [x] Ajouter les collections de cartes
-    - [x] Ajouter les cartes déjà récupérer dans la BDD
+## Description
+Get 1 booster by day (5 pokemons). Using [PokemonTCG.io](https://pokemontcg.io/) API as data source.
+
+## Prerequisite
+```
+npm install -g @nestjs/cli
+```
+For more details: [NestJS](https://docs.nestjs.com/cli/overview)
+
+## Installation
+Clone this repository:
+```
+git clone https://github.com/Viliprant/random-pokemon-server.git
+```
+
+Then install dependencies:
+```
+cd random-pokemon-server
+npm install
+```
+
+## TODO: 
+- Limit 1 booster by day for each user.
