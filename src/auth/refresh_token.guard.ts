@@ -43,16 +43,8 @@ export class RefreshTokenGuard implements CanActivate {
   }
 
   async validateRefreshToken(refreshTokenString: string) {
-    const token = JSON.parse(refreshTokenString);
-
-    if (!token?.refresh_token) {
-      return null;
-    }
-
     try {
-      const payload = await this.refreshTokenService.verify(
-        token.refresh_token,
-      );
+      const payload = await this.refreshTokenService.verify(refreshTokenString);
 
       const isSameRefreshToken = await this.checkUserRefreshTokenInDatabase(
         payload,
@@ -71,16 +63,15 @@ export class RefreshTokenGuard implements CanActivate {
   }
 
   async checkUserRefreshTokenInDatabase(payload) {
-    const safeUser: User = await this.userService.findOneByUsername(
+    const user: User = await this.userService.findOneByUsername(
       payload.username,
     );
 
-    if (!safeUser) {
+    if (!user) {
       return false;
     }
 
-    const refreshTokenDB = JSON.parse(safeUser.refreshToken).refresh_token;
-    const payloadDB = await this.refreshTokenService.verify(refreshTokenDB);
+    const payloadDB = await this.refreshTokenService.verify(user.refreshToken);
 
     const isMatchingWithDB: boolean = lodash.isEqual(payloadDB, payload);
 

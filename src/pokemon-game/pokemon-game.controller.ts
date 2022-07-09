@@ -2,7 +2,6 @@ import {
   ClassSerializerInterceptor,
   Controller,
   Get,
-  InternalServerErrorException,
   Request,
   UseGuards,
   UseInterceptors,
@@ -10,8 +9,8 @@ import {
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { RefreshTokenGuard } from 'src/auth/refresh_token.guard';
 import { Booster } from './entities/booster.entity';
-import { Collection } from './entities/collection.entity';
 import { PokemonGameService } from './pokemon-game.service';
+import { Collection } from './entities/collection.entity';
 
 @Controller('pokemon-game')
 export class PokemonGameController {
@@ -20,14 +19,6 @@ export class PokemonGameController {
   @UseGuards(JwtAuthGuard, RefreshTokenGuard)
   @Get('booster')
   async openBooster(@Request() request): Promise<Booster> {
-    const collection: Collection =
-      await this.pokemonGameService.findCollectionByUserID(request.user.id);
-
-    if (!collection) {
-      console.error("La collection n'existe pas.");
-      throw new InternalServerErrorException();
-    }
-
     const booster: Booster = await this.pokemonGameService.createBooster();
     this.pokemonGameService.addBoosterToUser(booster, request.user.id);
 
@@ -38,7 +29,7 @@ export class PokemonGameController {
   @UseInterceptors(ClassSerializerInterceptor)
   @Get('collection')
   async findUserCards(@Request() request): Promise<Collection> {
-    return await this.pokemonGameService.findCollectionByUserID(
+    return await this.pokemonGameService.getCollectionCardsByUserID(
       request.user.id,
     );
   }

@@ -1,20 +1,31 @@
-import { Injectable, InternalServerErrorException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { Pokemon } from 'src/pokemon/entities/pokemon.entity';
 import { PokemonService } from 'src/pokemon/pokemon.service';
 import { Booster } from './entities/booster.entity';
-import { Cards } from './entities/cards.entity';
-import { Collection } from './entities/collection.entity';
-import * as lodash from 'lodash';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { UserPokemonLink } from 'src/pokemon/entities/user-pokemon.entity';
 import { User } from 'src/users/entities/user.entity';
-import { OnEvent } from '@nestjs/event-emitter';
+import { Image } from 'src/pokemon/entities/image.entity';
+import { UsersService } from 'src/users/users.service';
+import { PokemonCard } from './entities/pokemonCard.entity';
+import { PokemonWithQuantityDto } from './dto/pokemon-quantity.dto';
+import { Collection } from './entities/collection.entity';
 
 @Injectable()
 export class PokemonGameService {
-  collections: Collection[] = [];
+  constructor(
+    private readonly pokemonService: PokemonService,
+    private readonly userService: UsersService,
+    @InjectRepository(Pokemon) private pokemonRepository: Repository<Pokemon>,
+    @InjectRepository(Image) private imageRepository: Repository<Image>,
 
-  constructor(private readonly pokemonService: PokemonService) {}
+    @InjectRepository(UserPokemonLink)
+    private userPokemonLinkRepository: Repository<UserPokemonLink>,
+  ) {}
 
   async createBooster(): Promise<Booster> {
+    // TODO: Mettre toutes les raretés dans la BDD
     const allRarities: string[] = await this.pokemonService.getRarities();
 
     const booster: Booster = new Booster();
@@ -25,71 +36,85 @@ export class PokemonGameService {
       ); //! PSEUDO AlEATOIRE
       const randomRarity: string = allRarities[randomNumber];
 
-      const pokemon: Pokemon = await this.pokemonService.findRandomByRarity(
-        randomRarity,
-      );
-      if (pokemon) {
-        booster.add({ ...pokemon, quantity: 1 });
+      const randomPokemon: Pokemon =
+        await this.pokemonService.findRandomByRarity(randomRarity);
+
+      if (randomPokemon) {
+        const alreadyInDB = await this.pokemonRepository.findOneBy(
+          randomPokemon,
+        );
+        if (!alreadyInDB) {
+          const pokemon = this.pokemonRepository.create(randomPokemon);
+          const newPokemon = await this.pokemonRepository.save(pokemon);
+          booster.add(newPokemon);
+        } else {
+          booster.add(alreadyInDB);
+        }
       }
     }
 
-    // TODO INSERTION EN BASE DE DONNEES
     return booster;
   }
 
-  addBoosterToUser(booster: Booster, userID: string): void {
-    const collection = this.collections.find(
-      (collection) => collection.userID === userID,
-    );
-
-    if (!collection) {
-      console.error("La collection n'existe pas.");
-      throw new InternalServerErrorException();
-    }
-
-    const newCards: Cards = this.createOrAddQuantity(booster, collection.cards);
-    collection.cards = newCards;
+  addBoosterToUser(booster: Booster, userID: number): void {
+    this.mergeBoosterWithUserCollection(booster, userID);
   }
 
-  async findCollectionByUserID(userID: string): Promise<Collection> {
-    const collection: Collection = await this.collections.find(
-      (collection) => collection.userID === userID,
-    );
-
-    if (!collection) {
-      console.error("La collection n'existe pas.");
-      throw new InternalServerErrorException();
-    }
-
-    return collection;
-  }
-
-  createOrAddQuantity(booster: Booster, cards: Cards): Cards {
-    const updatedCards = lodash.cloneDeep(cards);
-
-    booster.pokemons.map((pokemonToAdd) => {
+  async mergeBoosterWithUserCollection(booster: Booster, userID: number) {
+    const user: User = await this.userService.findOneByID(userID);
+    for (const pokemonToAdd of booster.pokemons) {
       if (pokemonToAdd) {
-        const alreadyExist: Pokemon = updatedCards.pokemons.find((pokemon) => {
-          return pokemon.id === pokemonToAdd.id;
-        });
-        if (alreadyExist) {
-          alreadyExist.quantity++;
+        const existingUserPokemonLink: UserPokemonLink =
+          await this.userPokemonLinkRepository.findOneBy({
+            userId: user.id,
+            pokemonId: pokemonToAdd.id,
+          });
+
+        if (existingUserPokemonLink) {
+          existingUserPokemonLink.quantity++;
+
+          await this.userPokemonLinkRepository.save(existingUserPokemonLink);
         } else {
-          updatedCards.pokemons.push(pokemonToAdd);
+          const UserPokemonLink: UserPokemonLink =
+            this.userPokemonLinkRepository.create({
+              user,
+              pokemon: pokemonToAdd,
+            });
+          await this.userPokemonLinkRepository.save(UserPokemonLink);
         }
-        return pokemonToAdd;
       }
-    });
-
-    return updatedCards;
+    }
   }
 
-  createCollection(userID: string) {
-    this.collections.push(new Collection(userID));
-  }
+  async getCollectionCardsByUserID(userID: number): Promise<Collection> {
+    const pokemons: PokemonWithQuantityDto[] =
+      await this.userPokemonLinkRepository.query(
+        `
+      SELECT p.id, name, rarity, small, large, quantity
+      FROM USER_POKEMON_LINK upl
+      LEFT JOIN USER u ON upl.userid = u.id
+      LEFT JOIN POKEMON p ON upl.pokemonid = p.id
+      LEFT JOIN IMAGE i ON p.imagesid = i.id
+      WHERE u.id == ?
+    `,
+        [userID],
+      );
 
-  @OnEvent('user.created')
-  handleOrderCreatedEvent(newUser: User) {
-    this.createCollection(newUser.id);
+    const pokemonCards: PokemonCard[] = pokemons.map((pokemonDto) => {
+      return {
+        pokemon: {
+          id: pokemonDto.id,
+          name: pokemonDto.name,
+          rarity: pokemonDto.rarity,
+          images: {
+            small: pokemonDto.small,
+            large: pokemonDto.large,
+          },
+        },
+        quantity: pokemonDto.quantity,
+      };
+    }) as PokemonCard[];
+
+    return new Collection(pokemonCards);
   }
 }

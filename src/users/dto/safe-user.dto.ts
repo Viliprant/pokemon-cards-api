@@ -1,7 +1,7 @@
 import { User } from '../entities/user.entity';
 
 export class SafeUser {
-  id: string;
+  id: number;
   username: string;
   mail: string;
 

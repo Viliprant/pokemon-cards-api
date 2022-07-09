@@ -16,10 +16,9 @@ export class LoginController {
   @Post('auth/login')
   async login(@Request() req, @Res({ passthrough: true }) response: Response) {
     const newRefreshToken = await this.authService.createRefreshToken(req.user);
-    const stringifiedToken = JSON.stringify(newRefreshToken);
-    this.userService.updateRefreshToken(req.user.id, stringifiedToken);
+    this.userService.updateRefreshToken(req.user.id, newRefreshToken);
 
-    response.cookie('auth_cookie', stringifiedToken, {
+    response.cookie('auth_cookie', newRefreshToken, {
       httpOnly: true,
     });
 
@@ -33,10 +32,9 @@ export class LoginController {
     @Res({ passthrough: true }) response: Response,
   ) {
     const newRefreshToken = await this.authService.createRefreshToken(req.user);
-    const stringifiedToken = JSON.stringify(newRefreshToken);
-    this.userService.updateRefreshToken(req.user.id, stringifiedToken);
+    this.userService.updateRefreshToken(req.user.id, newRefreshToken);
 
-    response.cookie('auth_cookie', stringifiedToken, {
+    response.cookie('auth_cookie', newRefreshToken, {
       httpOnly: true,
     });
 

@@ -5,7 +5,6 @@ import { User } from 'src/users/entities/user.entity';
 import { UsersService } from '../users/users.service';
 import * as bcrypt from 'bcrypt';
 import { SafeUser } from 'src/users/dto/safe-user.dto';
-import { EventEmitter2 } from '@nestjs/event-emitter';
 import { RefreshTokenService } from './refresh-token/refresh-token.service';
 import { randomBytes } from 'crypto';
 
@@ -14,7 +13,6 @@ export class AuthService {
   constructor(
     private usersService: UsersService,
     private jwtService: JwtService,
-    private eventEmitter: EventEmitter2,
     private refreshTokenService: RefreshTokenService,
   ) {}
 
@@ -50,8 +48,6 @@ export class AuthService {
 
     const createdUser: User = await this.usersService.createUser(newUser);
 
-    this.eventEmitter.emit('user.created', createdUser);
-
     return this.createAccessToken(createdUser);
   }
 
@@ -69,9 +65,7 @@ export class AuthService {
       salt: randomBytes(16).toString('hex'),
     };
 
-    return {
-      refresh_token: await this.refreshTokenService.sign(payload),
-    };
+    return await this.refreshTokenService.sign(payload);
   }
 
   async checkMail(mail: string): Promise<string[]> {

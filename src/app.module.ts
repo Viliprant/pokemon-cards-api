@@ -3,7 +3,8 @@ import { PokemonModule } from './pokemon/pokemon.module';
 import { PokemonGameModule } from './pokemon-game/pokemon-game.module';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
-import { EventEmitterModule } from '@nestjs/event-emitter';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { typeORMModuleOptions } from './TypeORMModuleOptions';
 
 @Module({
   imports: [
@@ -11,7 +12,7 @@ import { EventEmitterModule } from '@nestjs/event-emitter';
     PokemonGameModule,
     AuthModule,
     UsersModule,
-    EventEmitterModule.forRoot(),
+    TypeOrmModule.forRoot(typeORMModuleOptions),
   ],
 })
 export class AppModule {}

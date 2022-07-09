@@ -7,9 +7,7 @@
  - [x] JWT
  - [x] Refresh Token
  - [x] Hash password
- - [x] Rajouter des events:
-    - [x] UserCreated -> Create collection for this user
- - [ ] Base de données
-    - [ ] Ajouter les utilisateurs
-    - [ ] Ajouter les collections de cartes
-    - [ ] Ajouter les cartes déjà récupérer dans la BDD
+ - [x] Base de données
+    - [x] Ajouter les utilisateurs
+    - [x] Ajouter les collections de cartes
+    - [x] Ajouter les cartes déjà récupérer dans la BDD

@@ -1,49 +1,54 @@
 import { Injectable } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { User } from './entities/user.entity';
-import { v4 as uuid } from 'uuid';
 import * as bcrypt from 'bcrypt';
 import { ConfigService } from '@nestjs/config';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 
 @Injectable()
 export class UsersService {
-  constructor(private readonly configService: ConfigService) {}
+  constructor(
+    private readonly configService: ConfigService,
+    @InjectRepository(User) private userRepository: Repository<User>,
+  ) {}
 
   private readonly users: User[] = [];
 
+  async findOneByID(id: number): Promise<User | undefined> {
+    return await this.userRepository.findOneBy({ id });
+  }
+
   async findOneByUsername(username: string): Promise<User | undefined> {
-    return this.users.find((user) => user.username === username);
+    return await this.userRepository.findOneBy({ username });
   }
 
   async findOneByMail(mail: string): Promise<User | undefined> {
-    return this.users.find((user) => user.mail === mail);
+    return await this.userRepository.findOneBy({ mail });
   }
 
-  async updateRefreshToken(userID: string, newRefreshToken: string) {
-    const user: User = this.users.find((user) => user.id === userID);
+  async updateRefreshToken(userID: number, newRefreshToken: string) {
+    const user: User = await this.findOneByID(userID);
 
     user.refreshToken = newRefreshToken;
+
+    return this.userRepository.save(user);
   }
 
-  async createUser(newUser: CreateUserDto): Promise<User> {
+  async createUser(newUserDto: CreateUserDto): Promise<User> {
     const saltOrRounds: number = +(await this.configService.get<number>(
       'SAlT_OR_ROUNDS',
     ));
 
-    const hashPassword = await bcrypt.hash(newUser.password, saltOrRounds);
+    const hashPassword = await bcrypt.hash(newUserDto.password, saltOrRounds);
 
-    const user: User = {
-      id: uuid(),
-      username: newUser.username,
-      mail: newUser.mail,
+    const newUser: User = this.userRepository.create({
+      username: newUserDto.username,
+      mail: newUserDto.mail,
       password: hashPassword,
-      createdAt: new Date(),
-      updatedAt: new Date(),
       refreshToken: null,
-    };
+    });
 
-    this.users.push(user);
-
-    return user;
+    return this.userRepository.save(newUser);
   }
 }
